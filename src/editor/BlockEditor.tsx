@@ -1,10 +1,15 @@
-import { useEffect, useRef } from "react";
+import {
+    useEffect,
+    useRef,
+    type MouseEvent,
+} from "react";
 import {
     DndContext,
     PointerSensor,
     closestCenter,
     useSensor,
     useSensors,
+    type DragEndEvent,
 } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -12,12 +17,23 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import { SortableBlock } from "./SortableBlock.jsx";
-import { createId } from "../tree/utilities.js";
+import { SortableBlock } from "./SortableBlock";
+import { createId } from "../tree/utilities";
+import type { Block, BlockColor, BlockType } from "../types";
 
-export function BlockEditor({ blocks, onChange }) {
-    const textareaRefs = useRef({});
-    const pendingFocus = useRef(null);
+interface PendingFocus {
+    id: string;
+    caret: number;
+}
+
+export interface BlockEditorProps {
+    blocks: Block[];
+    onChange: (nextBlocks: Block[]) => void;
+}
+
+export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
+    const textareaRefs = useRef<Record<string, HTMLTextAreaElement>>({});
+    const pendingFocus = useRef<PendingFocus | null>(null);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -41,7 +57,7 @@ export function BlockEditor({ blocks, onChange }) {
         pendingFocus.current = null;
     });
 
-    function registerRef(id, element) {
+    function registerRef(id: string, element: HTMLTextAreaElement | null) {
         if (element) {
             textareaRefs.current[id] = element;
         }
@@ -50,7 +66,7 @@ export function BlockEditor({ blocks, onChange }) {
         }
     }
 
-    function handleDragEnd(event) {
+    function handleDragEnd(event: DragEndEvent) {
         const active = event.active;
         const over = event.over;
         if (!over || active.id === over.id) {
@@ -62,7 +78,7 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleTextChange(id, text) {
+    function handleTextChange(id: string, text: string) {
         const nextBlocks = blocks.map((block) => {
             if (block.id === id) {
                 return { ...block, text: text };
@@ -72,12 +88,12 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleTypeChange(id, nextType) {
+    function handleTypeChange(id: string, nextType: string) {
         const nextBlocks = blocks.map((block) => {
             if (block.id !== id) {
                 return block;
             }
-            const updatedBlock = { ...block, type: nextType };
+            const updatedBlock: Block = { ...block, type: nextType as BlockType };
             if (nextType !== "checklist") {
                 delete updatedBlock.checked;
             }
@@ -89,7 +105,7 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleCheckChange(id, nextChecked) {
+    function handleCheckChange(id: string, nextChecked: boolean) {
         const nextBlocks = blocks.map((block) => {
             if (block.id === id) {
                 return { ...block, checked: nextChecked };
@@ -99,7 +115,7 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function getSplitChildType(currentType) {
+    function getSplitChildType(currentType: BlockType | undefined): BlockType {
         if (currentType === "h1" || currentType === "h2" || currentType === "h3" || currentType === "heading") {
             return "text";
         }
@@ -109,13 +125,13 @@ export function BlockEditor({ blocks, onChange }) {
         return "text";
     }
 
-    function handleSplit(id, caretIndex) {
+    function handleSplit(id: string, caretIndex: number) {
         const index = blocks.findIndex((block) => block.id === id);
         const currentBlock = blocks[index];
         const beforeText = currentBlock.text.slice(0, caretIndex);
         const afterText = currentBlock.text.slice(caretIndex);
         const newType = getSplitChildType(currentBlock.type);
-        const newBlock = { id: createId("block"), type: newType, text: afterText };
+        const newBlock: Block = { id: createId("block"), type: newType, text: afterText };
         if (newType === "checklist") {
             newBlock.checked = false;
         }
@@ -126,7 +142,7 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleMergeBackward(id) {
+    function handleMergeBackward(id: string) {
         const index = blocks.findIndex((block) => block.id === id);
         if (index <= 0) {
             return;
@@ -149,10 +165,10 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleAddBlockAfter(id, blockType) {
-        const newType = blockType ? blockType : "text";
+    function handleAddBlockAfter(id: string, blockType?: string) {
+        const newType = (blockType ? blockType : "text") as BlockType;
         const index = blocks.findIndex((block) => block.id === id);
-        const newBlock = { id: createId("block"), type: newType, text: "" };
+        const newBlock: Block = { id: createId("block"), type: newType, text: "" };
         if (newType === "checklist") {
             newBlock.checked = false;
         }
@@ -164,13 +180,13 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleDuplicateBlock(id) {
+    function handleDuplicateBlock(id: string) {
         const index = blocks.findIndex((block) => block.id === id);
         if (index < 0) {
             return;
         }
         const sourceBlock = blocks[index];
-        const duplicateBlock = { ...sourceBlock, id: createId("block") };
+        const duplicateBlock: Block = { ...sourceBlock, id: createId("block") };
         const nextBlocks = [...blocks];
         nextBlocks.splice(index + 1, 0, duplicateBlock);
         if (duplicateBlock.type !== "divider") {
@@ -180,13 +196,13 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleColorChange(id, nextColor) {
+    function handleColorChange(id: string, nextColor: BlockColor | null) {
         const nextBlocks = blocks.map((block) => {
             if (block.id !== id) {
                 return block;
             }
             if (nextColor === null) {
-                const stripped = { ...block };
+                const stripped: Block = { ...block };
                 delete stripped.color;
                 return stripped;
             }
@@ -195,7 +211,7 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleThicknessChange(id, nextThickness) {
+    function handleThicknessChange(id: string, nextThickness: number) {
         const nextBlocks = blocks.map((block) => {
             if (block.id !== id) {
                 return block;
@@ -205,23 +221,23 @@ export function BlockEditor({ blocks, onChange }) {
         onChange(nextBlocks);
     }
 
-    function handleLineStyleChange(id, nextLineStyle) {
+    function handleLineStyleChange(id: string, nextLineStyle: string) {
         const nextBlocks = blocks.map((block) => {
             if (block.id !== id) {
                 return block;
             }
-            return { ...block, lineStyle: nextLineStyle };
+            return { ...block, lineStyle: nextLineStyle as Block["lineStyle"] };
         });
         onChange(nextBlocks);
     }
 
-    function handleLanguageChange(id, nextLanguage) {
+    function handleLanguageChange(id: string, nextLanguage: string) {
         const nextBlocks = blocks.map((block) => {
             if (block.id !== id) {
                 return block;
             }
             if (!nextLanguage) {
-                const stripped = { ...block };
+                const stripped: Block = { ...block };
                 delete stripped.language;
                 return stripped;
             }
@@ -231,24 +247,24 @@ export function BlockEditor({ blocks, onChange }) {
     }
 
     function handleAddBlockAtEnd() {
-        const newBlock = { id: createId("block"), type: "text", text: "" };
+        const newBlock: Block = { id: createId("block"), type: "text", text: "" };
         const nextBlocks = [...blocks, newBlock];
         pendingFocus.current = { id: newBlock.id, caret: 0 };
         onChange(nextBlocks);
     }
 
-    function handleTailClick(event) {
+    function handleTailClick(event: MouseEvent<HTMLDivElement>) {
         if (event.target !== event.currentTarget) {
             return;
         }
         handleAddBlockAtEnd();
     }
 
-    function handleRemoveBlock(id) {
+    function handleRemoveBlock(id: string) {
         const index = blocks.findIndex((block) => block.id === id);
         const nextBlocks = blocks.filter((block) => block.id !== id);
         if (nextBlocks.length === 0) {
-            const replacement = { id: createId("block"), type: "text", text: "" };
+            const replacement: Block = { id: createId("block"), type: "text", text: "" };
             pendingFocus.current = { id: replacement.id, caret: 0 };
             onChange([replacement]);
             return;

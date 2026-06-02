@@ -1,13 +1,43 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import {
+    forwardRef,
+    useEffect,
+    useRef,
+    useState,
+    type CSSProperties,
+    type HTMLAttributes,
+    type KeyboardEvent,
+    type LegacyRef,
+    type MouseEvent,
+} from "react";
 
-export const TreeItem = forwardRef(function TreeItem(props, ref) {
+export interface TreeItemProps extends HTMLAttributes<HTMLLIElement> {
+    label: string;
+    depth: number;
+    indentationWidth: number;
+    hasChildren: boolean;
+    collapsed: boolean;
+    childCount?: number;
+    selected?: boolean;
+    clone?: boolean;
+    ghost?: boolean;
+    disableInteraction?: boolean;
+    style?: CSSProperties;
+    wrapperRef?: LegacyRef<HTMLLIElement> | ((node: HTMLLIElement | null) => void);
+    handleProps?: Record<string, unknown>;
+    onCollapse?: () => void;
+    onSelect?: () => void;
+    onAddChild?: () => void;
+    onRemove?: () => void;
+    onRename?: (nextLabel: string) => void;
+}
+
+export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(function TreeItem(props, ref) {
     const {
         label,
         depth,
         indentationWidth,
         hasChildren,
         collapsed,
-        childCount,
         selected,
         clone,
         ghost,
@@ -20,12 +50,13 @@ export const TreeItem = forwardRef(function TreeItem(props, ref) {
         onAddChild,
         onRemove,
         onRename,
+        childCount: _childCount,
         ...wrapperProps
     } = props;
 
     const [isEditing, setIsEditing] = useState(false);
-    const [draft, setDraft] = useState(label || "");
-    const inputRef = useRef(null);
+    const [draft, setDraft] = useState<string>(label || "");
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         if (!isEditing) {
@@ -61,7 +92,7 @@ export const TreeItem = forwardRef(function TreeItem(props, ref) {
         setIsEditing(false);
     }
 
-    function handleInputKeyDown(event) {
+    function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
         if (event.key === "Enter") {
             event.preventDefault();
             commitEditing();
@@ -95,7 +126,7 @@ export const TreeItem = forwardRef(function TreeItem(props, ref) {
 
     return (
         <li
-            ref={wrapperRef}
+            ref={wrapperRef as LegacyRef<HTMLLIElement>}
             className={wrapperClassNames.join(" ")}
             style={{ paddingLeft: `${spacing}px` }}
             {...wrapperProps}
@@ -105,7 +136,7 @@ export const TreeItem = forwardRef(function TreeItem(props, ref) {
                     type="button"
                     className={`tree-item-collapse ${hasChildren ? "" : "is-hidden"}`}
                     aria-label={collapsed ? "펼치기" : "접기"}
-                    onClick={(event) => {
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
                         event.stopPropagation();
                         if (onCollapse) {
                             onCollapse();

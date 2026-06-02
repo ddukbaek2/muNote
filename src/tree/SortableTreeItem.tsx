@@ -1,9 +1,9 @@
-import { useSortable } from "@dnd-kit/sortable";
+import { useSortable, type AnimateLayoutChanges } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { TreeItem } from "./TreeItem.jsx";
+import { TreeItem, type TreeItemProps } from "./TreeItem";
 
-const animateLayoutChanges = (args) => {
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
     const { isSorting, wasDragging } = args;
     if (isSorting || wasDragging) {
         return false;
@@ -11,7 +11,11 @@ const animateLayoutChanges = (args) => {
     return true;
 };
 
-export function SortableTreeItem(props) {
+export interface SortableTreeItemProps extends Omit<TreeItemProps, "wrapperRef" | "handleProps" | "ghost" | "disableInteraction" | "style"> {
+    id: string;
+}
+
+export function SortableTreeItem(props: SortableTreeItemProps) {
     const {
         id,
         depth,
@@ -34,7 +38,7 @@ export function SortableTreeItem(props) {
 
     const style = {
         transform: CSS.Translate.toString(transform),
-        transition: transition,
+        transition: transition || undefined,
     };
 
     return (

@@ -1,6 +1,14 @@
 import { arrayMove } from "@dnd-kit/sortable";
 
-export function createId(prefix = "item") {
+import type {
+    FlattenedItem,
+    ItemPathEntry,
+    ProjectionResult,
+    SetterFn,
+    TreeItem,
+} from "../types";
+
+export function createId(prefix: string = "item"): string {
     const globalCrypto = globalThis.crypto;
     if (globalCrypto && typeof globalCrypto.randomUUID === "function") {
         const uuid = globalCrypto.randomUUID();
@@ -11,25 +19,31 @@ export function createId(prefix = "item") {
     return `${prefix}-${timestamp}-${randomPart}`;
 }
 
-function getDragDepth(offset, indentationWidth) {
+function getDragDepth(offset: number, indentationWidth: number): number {
     return Math.round(offset / indentationWidth);
 }
 
-function getMaxDepth(previousItem) {
+function getMaxDepth(previousItem: FlattenedItem | undefined): number {
     if (previousItem) {
         return previousItem.depth + 1;
     }
     return 0;
 }
 
-function getMinDepth(nextItem) {
+function getMinDepth(nextItem: FlattenedItem | undefined): number {
     if (nextItem) {
         return nextItem.depth;
     }
     return 0;
 }
 
-export function getProjection(flattenedItems, activeId, overId, dragOffset, indentationWidth) {
+export function getProjection(
+    flattenedItems: FlattenedItem[],
+    activeId: string,
+    overId: string,
+    dragOffset: number,
+    indentationWidth: number,
+): ProjectionResult {
     const overItemIndex = flattenedItems.findIndex((item) => item.id === overId);
     const activeItemIndex = flattenedItems.findIndex((item) => item.id === activeId);
     const activeItem = flattenedItems[activeItemIndex];
@@ -49,7 +63,7 @@ export function getProjection(flattenedItems, activeId, overId, dragOffset, inde
         depth = minDepth;
     }
 
-    function getParentId() {
+    function getParentId(): string | null {
         if (depth === 0 || !previousItem) {
             return null;
         }
@@ -71,10 +85,10 @@ export function getProjection(flattenedItems, activeId, overId, dragOffset, inde
     return { depth, maxDepth, minDepth, parentId };
 }
 
-function flatten(items, parentId, depth) {
-    const result = [];
+function flatten(items: TreeItem[], parentId: string | null, depth: number): FlattenedItem[] {
+    const result: FlattenedItem[] = [];
     items.forEach((item, index) => {
-        const flattenedItem = {
+        const flattenedItem: FlattenedItem = {
             id: item.id,
             label: item.label,
             blocks: item.blocks,
@@ -94,15 +108,15 @@ function flatten(items, parentId, depth) {
     return result;
 }
 
-export function flattenTree(items) {
+export function flattenTree(items: TreeItem[]): FlattenedItem[] {
     return flatten(items, null, 0);
 }
 
-export function buildTree(flattenedItems) {
-    const rootNode = { id: "root", children: [] };
-    const nodeMap = { root: rootNode };
-    const items = flattenedItems.map((flattenedItem) => {
-        const item = {
+export function buildTree(flattenedItems: FlattenedItem[]): TreeItem[] {
+    const rootNode: TreeItem = { id: "root", label: "", blocks: [], collapsed: false, children: [] };
+    const nodeMap: Record<string, TreeItem> = { root: rootNode };
+    const items: TreeItem[] = flattenedItems.map((flattenedItem) => {
+        const item: TreeItem = {
             id: flattenedItem.id,
             label: flattenedItem.label,
             blocks: flattenedItem.blocks,
@@ -134,7 +148,10 @@ export function buildTree(flattenedItems) {
     return rootNode.children;
 }
 
-export function findItemDeep(items, itemId) {
+export function findItemDeep(items: TreeItem[], itemId: string | null): TreeItem | undefined {
+    if (itemId === null) {
+        return undefined;
+    }
     for (const item of items) {
         if (item.id === itemId) {
             return item;
@@ -149,15 +166,15 @@ export function findItemDeep(items, itemId) {
     return undefined;
 }
 
-export function removeItem(items, id) {
-    const result = [];
+export function removeItem(items: TreeItem[], id: string): TreeItem[] {
+    const result: TreeItem[] = [];
     for (const item of items) {
         if (item.id === id) {
             continue;
         }
         if (item.children.length > 0) {
             const filteredChildren = removeItem(item.children, id);
-            const nextItem = { ...item, children: filteredChildren };
+            const nextItem: TreeItem = { ...item, children: filteredChildren };
             result.push(nextItem);
         }
         else {
@@ -167,7 +184,12 @@ export function removeItem(items, id) {
     return result;
 }
 
-export function setProperty(items, id, property, setter) {
+export function setProperty<K extends keyof TreeItem>(
+    items: TreeItem[],
+    id: string,
+    property: K,
+    setter: SetterFn<TreeItem[K]>,
+): TreeItem[] {
     return items.map((item) => {
         if (item.id === id) {
             const nextValue = setter(item[property]);
@@ -181,7 +203,7 @@ export function setProperty(items, id, property, setter) {
     });
 }
 
-export function insertChild(items, parentId, newItem) {
+export function insertChild(items: TreeItem[], parentId: string | null, newItem: TreeItem): TreeItem[] {
     if (parentId === null) {
         return [...items, newItem];
     }
@@ -198,7 +220,7 @@ export function insertChild(items, parentId, newItem) {
     });
 }
 
-function countChildren(items) {
+function countChildren(items: TreeItem[]): number {
     return items.reduce((accumulator, item) => {
         const selfCount = 1;
         const descendantCount = countChildren(item.children);
@@ -206,7 +228,7 @@ function countChildren(items) {
     }, 0);
 }
 
-export function getChildCount(items, id) {
+export function getChildCount(items: TreeItem[], id: string | null): number {
     const item = findItemDeep(items, id);
     if (!item) {
         return 0;
@@ -214,7 +236,7 @@ export function getChildCount(items, id) {
     return countChildren(item.children);
 }
 
-export function getDirectChildCount(items, id) {
+export function getDirectChildCount(items: TreeItem[], id: string | null): number {
     const item = findItemDeep(items, id);
     if (!item) {
         return 0;
@@ -222,12 +244,15 @@ export function getDirectChildCount(items, id) {
     return item.children.length;
 }
 
-export function getItemPath(items, id) {
-    const path = [];
+export function getItemPath(items: TreeItem[], id: string | null): ItemPathEntry[] {
+    const path: ItemPathEntry[] = [];
+    if (id === null) {
+        return path;
+    }
 
-    function search(currentItems, currentTrail) {
+    function search(currentItems: TreeItem[], currentTrail: ItemPathEntry[]): boolean {
         for (const item of currentItems) {
-            const entry = { id: item.id, label: item.label };
+            const entry: ItemPathEntry = { id: item.id, label: item.label };
             const nextTrail = [...currentTrail, entry];
             if (item.id === id) {
                 nextTrail.forEach((pathEntry) => {
@@ -249,7 +274,7 @@ export function getItemPath(items, id) {
     return path;
 }
 
-export function removeChildrenOf(flattenedItems, ids) {
+export function removeChildrenOf(flattenedItems: FlattenedItem[], ids: string[]): FlattenedItem[] {
     const excludeParentIds = [...ids];
     return flattenedItems.filter((item) => {
         if (item.parentId !== null && excludeParentIds.includes(item.parentId)) {

@@ -8,6 +8,10 @@ import {
     closestCenter,
     useSensor,
     useSensors,
+    type DragEndEvent,
+    type DragMoveEvent,
+    type DragOverEvent,
+    type DragStartEvent,
 } from "@dnd-kit/core";
 import {
     SortableContext,
@@ -15,21 +19,33 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import { SortableTreeItem } from "./SortableTreeItem.jsx";
-import { TreeItem } from "./TreeItem.jsx";
+import { SortableTreeItem } from "./SortableTreeItem";
+import { TreeItem } from "./TreeItem";
 import {
     buildTree,
     flattenTree,
     getProjection,
     removeChildrenOf,
     setProperty,
-} from "./utilities.js";
+} from "./utilities";
+import type { FlattenedItem, TreeItem as TreeItemData } from "../types";
 
 const measuringConfiguration = {
     droppable: {
         strategy: MeasuringStrategy.Always,
     },
 };
+
+export interface SortableTreeProps {
+    items: TreeItemData[];
+    onItemsChange: (nextItems: TreeItemData[]) => void;
+    selectedId: string | null;
+    onSelect: (id: string) => void;
+    onAddChild: (id: string) => void;
+    onRemove: (id: string) => void;
+    onRename: (id: string, nextLabel: string) => void;
+    indentationWidth?: number;
+}
 
 export function SortableTree({
     items,
@@ -40,14 +56,14 @@ export function SortableTree({
     onRemove,
     onRename,
     indentationWidth = 24,
-}) {
-    const [activeId, setActiveId] = useState(null);
-    const [overId, setOverId] = useState(null);
-    const [offsetLeft, setOffsetLeft] = useState(0);
+}: SortableTreeProps) {
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [overId, setOverId] = useState<string | null>(null);
+    const [offsetLeft, setOffsetLeft] = useState<number>(0);
 
-    const flattenedItems = useMemo(() => {
+    const flattenedItems = useMemo<FlattenedItem[]>(() => {
         const flattenedTree = flattenTree(items);
-        const collapsedItems = flattenedTree.reduce((accumulator, item) => {
+        const collapsedItems = flattenedTree.reduce<string[]>((accumulator, item) => {
             if (item.collapsed && item.childCount > 0) {
                 return [...accumulator, item.id];
             }
@@ -84,23 +100,23 @@ export function SortableTree({
         document.body.style.removeProperty("cursor");
     }
 
-    function handleDragStart(event) {
-        const activeDraggableId = event.active.id;
+    function handleDragStart(event: DragStartEvent) {
+        const activeDraggableId = String(event.active.id);
         setActiveId(activeDraggableId);
         setOverId(activeDraggableId);
         document.body.style.setProperty("cursor", "grabbing");
     }
 
-    function handleDragMove(event) {
+    function handleDragMove(event: DragMoveEvent) {
         setOffsetLeft(event.delta.x);
     }
 
-    function handleDragOver(event) {
-        const nextOverId = event.over ? event.over.id : null;
+    function handleDragOver(event: DragOverEvent) {
+        const nextOverId = event.over ? String(event.over.id) : null;
         setOverId(nextOverId);
     }
 
-    function handleDragEnd(event) {
+    function handleDragEnd(event: DragEndEvent) {
         const active = event.active;
         const over = event.over;
         resetState();
@@ -110,8 +126,8 @@ export function SortableTree({
         const depth = projected.depth;
         const parentId = projected.parentId;
         const clonedItems = flattenTree(items);
-        const overIndex = clonedItems.findIndex((item) => item.id === over.id);
-        const activeIndex = clonedItems.findIndex((item) => item.id === active.id);
+        const overIndex = clonedItems.findIndex((item) => item.id === String(over.id));
+        const activeIndex = clonedItems.findIndex((item) => item.id === String(active.id));
         const activeTreeItem = clonedItems[activeIndex];
         clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId };
         const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
@@ -123,7 +139,7 @@ export function SortableTree({
         resetState();
     }
 
-    function handleCollapse(id) {
+    function handleCollapse(id: string) {
         const nextItems = setProperty(items, id, "collapsed", (value) => {
             return !value;
         });

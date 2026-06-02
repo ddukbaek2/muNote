@@ -1,9 +1,30 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+    type CSSProperties,
+    type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 
-export function BlockMenu({ anchorRef, items, onSelect, onClose }) {
-    const menuRef = useRef(null);
-    const [position, setPosition] = useState(null);
+import type { BlockMenuItem } from "../types";
+
+export interface BlockMenuProps {
+    anchorRef: RefObject<HTMLElement | null>;
+    items: BlockMenuItem[];
+    onSelect: (key: string) => void;
+    onClose: () => void;
+}
+
+interface MenuPosition {
+    top: number;
+    left: number;
+}
+
+export function BlockMenu({ anchorRef, items, onSelect, onClose }: BlockMenuProps) {
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const [position, setPosition] = useState<MenuPosition | null>(null);
 
     useLayoutEffect(() => {
         const anchorElement = anchorRef.current;
@@ -18,18 +39,19 @@ export function BlockMenu({ anchorRef, items, onSelect, onClose }) {
     }, [anchorRef]);
 
     useEffect(() => {
-        function handlePointerDown(event) {
+        function handlePointerDown(event: MouseEvent) {
+            const target = event.target as Node | null;
             const menuElement = menuRef.current;
             const anchorElement = anchorRef.current;
-            if (menuElement && menuElement.contains(event.target)) {
+            if (menuElement && target && menuElement.contains(target)) {
                 return;
             }
-            if (anchorElement && anchorElement.contains(event.target)) {
+            if (anchorElement && target && anchorElement.contains(target)) {
                 return;
             }
             onClose();
         }
-        function handleKeyDown(event) {
+        function handleKeyDown(event: KeyboardEvent) {
             if (event.key === "Escape") {
                 onClose();
             }
@@ -46,7 +68,7 @@ export function BlockMenu({ anchorRef, items, onSelect, onClose }) {
         return null;
     }
 
-    const style = {
+    const style: CSSProperties = {
         position: "fixed",
         top: `${position.top}px`,
         left: `${position.left}px`,
@@ -83,7 +105,9 @@ export function BlockMenu({ anchorRef, items, onSelect, onClose }) {
                         className={classNames.join(" ")}
                         role="menuitem"
                         onClick={() => {
-                            onSelect(item.key);
+                            if (item.key) {
+                                onSelect(item.key);
+                            }
                             onClose();
                         }}
                     >

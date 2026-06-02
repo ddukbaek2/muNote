@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type PointerEvent as ReactPointerEvent,
+} from "react";
 
-import { SortableTree } from "./tree/SortableTree.jsx";
-import { BlockEditor } from "./editor/BlockEditor.jsx";
-import { BlockMenu } from "./editor/BlockMenu.jsx";
+import { SortableTree } from "./tree/SortableTree";
+import { BlockEditor } from "./editor/BlockEditor";
+import { BlockMenu } from "./editor/BlockMenu";
 import {
     createId,
     findItemDeep,
@@ -11,12 +17,13 @@ import {
     insertChild,
     removeItem,
     setProperty,
-} from "./tree/utilities.js";
+} from "./tree/utilities";
+import type { BlockMenuItem, ItemSettings, Theme, TreeItem } from "./types";
 import "./tree/SortableTree.css";
 import "./editor/BlockEditor.css";
 import "./App.css";
 
-const initialItems = [
+const initialItems: TreeItem[] = [
     {
         id: "welcome",
         label: "환영합니다",
@@ -28,7 +35,7 @@ const initialItems = [
     },
 ];
 
-function createEmptyItem() {
+function createEmptyItem(): TreeItem {
     return {
         id: createId("item"),
         label: "새 아이템",
@@ -40,7 +47,7 @@ function createEmptyItem() {
     };
 }
 
-function getInitialTheme() {
+function getInitialTheme(): Theme {
     const stored = window.localStorage.getItem("react-study-theme");
     if (stored === "dark" || stored === "light") {
         return stored;
@@ -55,7 +62,7 @@ const TREE_PANE_MIN_WIDTH = 200;
 const TREE_PANE_MAX_WIDTH = 600;
 const TREE_PANE_DEFAULT_WIDTH = 280;
 
-function getInitialTreePaneWidth() {
+function getInitialTreePaneWidth(): number {
     const stored = window.localStorage.getItem("react-study-tree-pane-width");
     const parsed = stored ? parseInt(stored, 10) : Number.NaN;
     if (Number.isFinite(parsed) && parsed >= TREE_PANE_MIN_WIDTH && parsed <= TREE_PANE_MAX_WIDTH) {
@@ -64,7 +71,7 @@ function getInitialTreePaneWidth() {
     return TREE_PANE_DEFAULT_WIDTH;
 }
 
-function clampTreePaneWidth(value) {
+function clampTreePaneWidth(value: number): number {
     if (value < TREE_PANE_MIN_WIDTH) {
         return TREE_PANE_MIN_WIDTH;
     }
@@ -74,7 +81,7 @@ function clampTreePaneWidth(value) {
     return value;
 }
 
-function getInitialTreePaneOpen() {
+function getInitialTreePaneOpen(): boolean {
     const stored = window.localStorage.getItem("react-study-tree-pane-open");
     if (stored === "false") {
         return false;
@@ -85,7 +92,7 @@ function getInitialTreePaneOpen() {
 const STORAGE_KEY_ITEMS = "react-study-items";
 const STORAGE_KEY_SELECTED_ID = "react-study-selected-id";
 
-function getInitialItems() {
+function getInitialItems(): TreeItem[] {
     try {
         const raw = window.localStorage.getItem(STORAGE_KEY_ITEMS);
         if (!raw) {
@@ -93,16 +100,16 @@ function getInitialItems() {
         }
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed as TreeItem[];
         }
         return initialItems;
     }
-    catch (error) {
+    catch {
         return initialItems;
     }
 }
 
-function getInitialSelectedId() {
+function getInitialSelectedId(): string | null {
     try {
         const raw = window.localStorage.getItem(STORAGE_KEY_SELECTED_ID);
         if (typeof raw === "string" && raw.length > 0) {
@@ -110,22 +117,22 @@ function getInitialSelectedId() {
         }
         return "welcome";
     }
-    catch (error) {
+    catch {
         return "welcome";
     }
 }
 
 function App() {
-    const [items, setItems] = useState(getInitialItems);
-    const [selectedId, setSelectedId] = useState(getInitialSelectedId);
-    const [theme, setTheme] = useState(getInitialTheme);
-    const [treePaneWidth, setTreePaneWidth] = useState(getInitialTreePaneWidth);
-    const [treePaneOpen, setTreePaneOpen] = useState(getInitialTreePaneOpen);
+    const [items, setItems] = useState<TreeItem[]>(getInitialItems);
+    const [selectedId, setSelectedId] = useState<string | null>(getInitialSelectedId);
+    const [theme, setTheme] = useState<Theme>(getInitialTheme);
+    const [treePaneWidth, setTreePaneWidth] = useState<number>(getInitialTreePaneWidth);
+    const [treePaneOpen, setTreePaneOpen] = useState<boolean>(getInitialTreePaneOpen);
     const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
     const [contentMenuOpen, setContentMenuOpen] = useState(false);
-    const isResizingRef = useRef(false);
-    const settingsButtonRef = useRef(null);
-    const contentSettingsButtonRef = useRef(null);
+    const isResizingRef = useRef<boolean>(false);
+    const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
+    const contentSettingsButtonRef = useRef<HTMLButtonElement | null>(null);
 
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
@@ -133,10 +140,10 @@ function App() {
     }, [theme]);
 
     useEffect(() => {
-        function handleContextMenu(event) {
+        function handleContextMenu(event: MouseEvent) {
             event.preventDefault();
         }
-        function handleDragStart(event) {
+        function handleDragStart(event: DragEvent) {
             event.preventDefault();
         }
         document.addEventListener("contextmenu", handleContextMenu);
@@ -159,7 +166,7 @@ function App() {
         setTreePaneOpen((open) => !open);
     }
 
-    function persistItems(nextItems) {
+    function persistItems(nextItems: TreeItem[]) {
         try {
             window.localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(nextItems));
         }
@@ -168,7 +175,7 @@ function App() {
         }
     }
 
-    function persistSelectedId(nextId) {
+    function persistSelectedId(nextId: string | null) {
         try {
             if (nextId === null) {
                 window.localStorage.removeItem(STORAGE_KEY_SELECTED_ID);
@@ -181,12 +188,12 @@ function App() {
         }
     }
 
-    function commitItems(nextItems) {
+    function commitItems(nextItems: TreeItem[]) {
         setItems(nextItems);
         persistItems(nextItems);
     }
 
-    function commitSelectedId(nextId) {
+    function commitSelectedId(nextId: string | null) {
         setSelectedId(nextId);
         persistSelectedId(nextId);
     }
@@ -218,7 +225,8 @@ function App() {
         input.type = "file";
         input.accept = "application/json,.json";
         input.onchange = async (changeEvent) => {
-            const file = changeEvent.target.files && changeEvent.target.files[0];
+            const target = changeEvent.target as HTMLInputElement;
+            const file = target.files && target.files[0];
             if (!file) {
                 return;
             }
@@ -261,7 +269,7 @@ function App() {
         commitSelectedId(null);
     }
 
-    function handleSettingsMenuSelect(key) {
+    function handleSettingsMenuSelect(key: string) {
         if (key === "toggle-theme") {
             handleToggleTheme();
             return;
@@ -279,13 +287,13 @@ function App() {
         }
     }
 
-    function handleResizerPointerDown(event) {
+    function handleResizerPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
         event.preventDefault();
         isResizingRef.current = true;
         document.body.style.cursor = "col-resize";
         document.body.style.userSelect = "none";
 
-        function handlePointerMove(moveEvent) {
+        function handlePointerMove(moveEvent: PointerEvent) {
             if (!isResizingRef.current) {
                 return;
             }
@@ -313,15 +321,15 @@ function App() {
         });
     }
 
-    function handleItemsChange(nextItems) {
+    function handleItemsChange(nextItems: TreeItem[]) {
         commitItems(nextItems);
     }
 
-    function handleSelect(id) {
+    function handleSelect(id: string) {
         commitSelectedId(id);
     }
 
-    function handleAddChild(parentId) {
+    function handleAddChild(parentId: string) {
         const newItem = createEmptyItem();
         const nextItems = insertChild(items, parentId, newItem);
         commitItems(nextItems);
@@ -335,7 +343,7 @@ function App() {
         commitSelectedId(newItem.id);
     }
 
-    function handleRemove(id) {
+    function handleRemove(id: string) {
         const targetItem = findItemDeep(items, id);
         if (!targetItem) {
             return;
@@ -362,7 +370,7 @@ function App() {
         }
     }
 
-    function renameItem(id, nextLabel) {
+    function renameItem(id: string | null, nextLabel: string) {
         if (id === null) {
             return;
         }
@@ -372,11 +380,14 @@ function App() {
         commitItems(nextItems);
     }
 
-    function handleRenameSelected(event) {
+    function handleRenameSelected(event: ChangeEvent<HTMLInputElement>) {
         renameItem(selectedId, event.target.value);
     }
 
-    function handleBlocksChange(nextBlocks) {
+    function handleBlocksChange(nextBlocks: TreeItem["blocks"]) {
+        if (selectedId === null) {
+            return;
+        }
         const nextItems = setProperty(items, selectedId, "blocks", () => {
             return nextBlocks;
         });
@@ -385,17 +396,17 @@ function App() {
 
     const selectedItem = selectedId !== null ? findItemDeep(items, selectedId) : null;
     const selectedPath = selectedId !== null ? getItemPath(items, selectedId) : [];
-    const selectedSettings = (selectedItem && selectedItem.settings) ? selectedItem.settings : {};
+    const selectedSettings: ItemSettings = (selectedItem && selectedItem.settings) ? selectedItem.settings : {};
     const showTitle = selectedSettings.showTitle !== false;
     const showBreadcrumb = selectedSettings.showBreadcrumb !== false;
     const distinguishBlockArea = selectedSettings.distinguishBlockArea === true;
 
-    function handleContentMenuSelect(key) {
+    function handleContentMenuSelect(key: string) {
         if (selectedId === null || !selectedItem) {
             return;
         }
-        const currentSettings = selectedItem.settings ? selectedItem.settings : {};
-        let nextSettings;
+        const currentSettings: ItemSettings = selectedItem.settings ? selectedItem.settings : {};
+        let nextSettings: ItemSettings;
         if (key === "toggle-title") {
             nextSettings = { ...currentSettings, showTitle: !showTitle };
         }
@@ -414,7 +425,7 @@ function App() {
         commitItems(nextItems);
     }
 
-    const contentMenuItems = [
+    const contentMenuItems: BlockMenuItem[] = [
         { header: "콘텐트 설정" },
         {
             key: "toggle-title",
@@ -433,7 +444,7 @@ function App() {
         },
     ];
 
-    const settingsMenuItems = [
+    const settingsMenuItems: BlockMenuItem[] = [
         { header: "테마" },
         {
             key: "toggle-theme",

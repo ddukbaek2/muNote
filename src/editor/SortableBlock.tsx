@@ -1,11 +1,21 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ChangeEvent,
+    type CSSProperties,
+    type KeyboardEvent,
+} from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import hljs from "highlight.js/lib/common";
 
-import { BlockMenu } from "./BlockMenu.jsx";
+import { BlockMenu } from "./BlockMenu";
+import type { BlockColor, BlockMenuItem, BlockType, LineStyle } from "../types";
 
-const PLACEHOLDERS = {
+const PLACEHOLDERS: Record<string, string> = {
     text: "내용을 입력하세요.",
     h1: "제목 1",
     h2: "제목 2",
@@ -14,7 +24,7 @@ const PLACEHOLDERS = {
     code: "코드를 입력하세요.",
 };
 
-const TYPE_ITEMS = [
+const TYPE_ITEMS: BlockMenuItem[] = [
     { key: "text", label: "텍스트", icon: "T" },
     { key: "h1", label: "제목 1", icon: "H₁" },
     { key: "h2", label: "제목 2", icon: "H₂" },
@@ -24,21 +34,36 @@ const TYPE_ITEMS = [
     { key: "divider", label: "수평선", icon: "─" },
 ];
 
-const THICKNESS_OPTIONS = [
+interface ThicknessOption {
+    value: number;
+    label: string;
+}
+
+const THICKNESS_OPTIONS: ThicknessOption[] = [
     { value: 1, label: "1px" },
     { value: 2, label: "2px" },
     { value: 4, label: "4px" },
     { value: 6, label: "6px" },
 ];
 
-const LINE_STYLE_OPTIONS = [
+interface LineStyleOption {
+    value: LineStyle;
+    label: string;
+}
+
+const LINE_STYLE_OPTIONS: LineStyleOption[] = [
     { value: "solid", label: "실선" },
     { value: "dashed", label: "파선" },
     { value: "dotted", label: "점선" },
     { value: "double", label: "이중선" },
 ];
 
-const LANGUAGE_OPTIONS = [
+interface LanguageOption {
+    value: string;
+    label: string;
+}
+
+const LANGUAGE_OPTIONS: LanguageOption[] = [
     { value: "plaintext", label: "Plain Text" },
     { value: "javascript", label: "JavaScript" },
     { value: "typescript", label: "TypeScript" },
@@ -59,7 +84,12 @@ const LANGUAGE_OPTIONS = [
     { value: "yaml", label: "YAML" },
 ];
 
-const COLOR_OPTIONS = [
+interface ColorOption {
+    key: BlockColor | null;
+    label: string;
+}
+
+const COLOR_OPTIONS: ColorOption[] = [
     { key: null, label: "기본" },
     { key: "gray", label: "회색" },
     { key: "brown", label: "갈색" },
@@ -72,7 +102,7 @@ const COLOR_OPTIONS = [
     { key: "red", label: "빨강" },
 ];
 
-function normalizeBlockType(type) {
+function normalizeBlockType(type: BlockType | undefined): BlockType {
     if (type === "heading") {
         return "h2";
     }
@@ -82,14 +112,14 @@ function normalizeBlockType(type) {
     return "text";
 }
 
-function escapeHtml(input) {
+function escapeHtml(input: string): string {
     return input
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
 }
 
-function highlightCode(code, language) {
+function highlightCode(code: string, language: string): string {
     const safeCode = typeof code === "string" ? code : "";
     if (!language || language === "plaintext") {
         return escapeHtml(safeCode);
@@ -99,14 +129,19 @@ function highlightCode(code, language) {
             const result = hljs.highlight(safeCode, { language: language, ignoreIllegals: true });
             return result.value;
         }
-        catch (error) {
+        catch {
             return escapeHtml(safeCode);
         }
     }
     return escapeHtml(safeCode);
 }
 
-function ColorPalette({ currentColor, onSelectColor }) {
+interface ColorPaletteProps {
+    currentColor: BlockColor | null;
+    onSelectColor: (color: BlockColor | null) => void;
+}
+
+function ColorPalette({ currentColor, onSelectColor }: ColorPaletteProps) {
     return (
         <div className="block-color-palette">
             {COLOR_OPTIONS.map((option) => {
@@ -134,29 +169,55 @@ function ColorPalette({ currentColor, onSelectColor }) {
     );
 }
 
-export function SortableBlock({
-    id,
-    type,
-    checked,
-    color,
-    text,
-    thickness,
-    lineStyle,
-    language,
-    registerRef,
-    onTextChange,
-    onTypeChange,
-    onCheckChange,
-    onColorChange,
-    onThicknessChange,
-    onLineStyleChange,
-    onLanguageChange,
-    onSplit,
-    onMergeBackward,
-    onAddBlockAfter,
-    onRemoveBlock,
-    onDuplicateBlock,
-}) {
+export interface SortableBlockProps {
+    id: string;
+    type?: BlockType;
+    checked?: boolean;
+    color?: BlockColor | null;
+    text: string;
+    thickness?: number;
+    lineStyle?: LineStyle;
+    language?: string;
+    registerRef: (id: string, element: HTMLTextAreaElement | null) => void;
+    onTextChange: (id: string, text: string) => void;
+    onTypeChange: (id: string, type: string) => void;
+    onCheckChange: (id: string, checked: boolean) => void;
+    onColorChange: (id: string, color: BlockColor | null) => void;
+    onThicknessChange: (id: string, thickness: number) => void;
+    onLineStyleChange: (id: string, style: string) => void;
+    onLanguageChange: (id: string, language: string) => void;
+    onSplit: (id: string, caretIndex: number) => void;
+    onMergeBackward: (id: string) => void;
+    onAddBlockAfter: (id: string, type?: string) => void;
+    onRemoveBlock: (id: string) => void;
+    onDuplicateBlock: (id: string) => void;
+}
+
+export function SortableBlock(props: SortableBlockProps) {
+    const {
+        id,
+        type,
+        checked,
+        color,
+        text,
+        thickness,
+        lineStyle,
+        language,
+        registerRef,
+        onTextChange,
+        onTypeChange,
+        onCheckChange,
+        onColorChange,
+        onThicknessChange,
+        onLineStyleChange,
+        onLanguageChange,
+        onSplit,
+        onMergeBackward,
+        onAddBlockAfter,
+        onRemoveBlock,
+        onDuplicateBlock,
+    } = props;
+
     const {
         attributes,
         listeners,
@@ -167,24 +228,24 @@ export function SortableBlock({
         isDragging,
     } = useSortable({ id: id });
 
-    const textareaRef = useRef(null);
-    const addButtonRef = useRef(null);
-    const handleButtonRef = useRef(null);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const addButtonRef = useRef<HTMLButtonElement | null>(null);
+    const handleButtonRef = useRef<HTMLButtonElement | null>(null);
 
     const [addMenuOpen, setAddMenuOpen] = useState(false);
     const [handleMenuOpen, setHandleMenuOpen] = useState(false);
 
     const blockType = normalizeBlockType(type);
     const isChecked = checked === true;
-    const currentColor = color ? color : null;
+    const currentColor: BlockColor | null = color ? color : null;
     const placeholder = PLACEHOLDERS[blockType] || PLACEHOLDERS.text;
     const dividerThickness = typeof thickness === "number" ? thickness : 2;
-    const dividerLineStyle = lineStyle ? lineStyle : "solid";
+    const dividerLineStyle: LineStyle = lineStyle ? lineStyle : "solid";
     const codeLanguage = language ? language : "plaintext";
 
-    const style = {
+    const style: CSSProperties = {
         transform: CSS.Translate.toString(transform),
-        transition: transition,
+        transition: transition || undefined,
     };
 
     useLayoutEffect(() => {
@@ -203,27 +264,27 @@ export function SortableBlock({
         }
     }, [isDragging]);
 
-    const highlightedHtml = useMemo(() => {
+    const highlightedHtml = useMemo<string>(() => {
         if (blockType !== "code") {
             return "";
         }
         return highlightCode(text, codeLanguage);
     }, [blockType, text, codeLanguage]);
 
-    function setTextareaRefs(element) {
+    function setTextareaRefs(element: HTMLTextAreaElement | null) {
         textareaRef.current = element;
         registerRef(id, element);
     }
 
-    function setHandleRefs(element) {
+    function setHandleRefs(element: HTMLButtonElement | null) {
         setActivatorNodeRef(element);
         handleButtonRef.current = element;
     }
 
-    function handleKeyDown(event) {
+    function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
         if (blockType === "code" && event.key === "Tab") {
             event.preventDefault();
-            const element = event.target;
+            const element = event.currentTarget;
             const start = element.selectionStart;
             const end = element.selectionEnd;
             element.setRangeText("\t", start, end, "end");
@@ -235,12 +296,12 @@ export function SortableBlock({
                 return;
             }
             event.preventDefault();
-            const caretIndex = event.target.selectionStart;
+            const caretIndex = event.currentTarget.selectionStart;
             onSplit(id, caretIndex);
             return;
         }
         if (event.key === "Backspace") {
-            const element = event.target;
+            const element = event.currentTarget;
             if (element.selectionStart === 0 && element.selectionEnd === 0) {
                 event.preventDefault();
                 onMergeBackward(id);
@@ -248,15 +309,15 @@ export function SortableBlock({
         }
     }
 
-    function handleCheckboxChange(event) {
+    function handleCheckboxChange(event: ChangeEvent<HTMLInputElement>) {
         onCheckChange(id, event.target.checked);
     }
 
-    function handleAddMenuSelect(key) {
+    function handleAddMenuSelect(key: string) {
         onAddBlockAfter(id, key);
     }
 
-    function handleHandleMenuSelect(key) {
+    function handleHandleMenuSelect(key: string) {
         if (key === "remove") {
             onRemoveBlock(id);
             return;
@@ -280,12 +341,12 @@ export function SortableBlock({
         }
     }
 
-    function handleColorSelect(colorKey) {
+    function handleColorSelect(colorKey: BlockColor | null) {
         onColorChange(id, colorKey);
         setHandleMenuOpen(false);
     }
 
-    function handleLanguageSelectChange(event) {
+    function handleLanguageSelectChange(event: ChangeEvent<HTMLSelectElement>) {
         onLanguageChange(id, event.target.value);
     }
 
@@ -296,25 +357,25 @@ export function SortableBlock({
         }
     }
 
-    const addMenuItems = [
+    const addMenuItems: BlockMenuItem[] = [
         { header: "블록 추가" },
         ...TYPE_ITEMS,
     ];
 
-    const convertMenuItems = TYPE_ITEMS.map((item) => {
+    const convertMenuItems: BlockMenuItem[] = TYPE_ITEMS.map((item) => {
         return { key: `convert:${item.key}`, label: item.label, icon: item.icon };
     });
 
-    let handleMenuItems;
+    let handleMenuItems: BlockMenuItem[];
     if (blockType === "divider") {
-        const thicknessItems = THICKNESS_OPTIONS.map((option) => {
+        const thicknessItems: BlockMenuItem[] = THICKNESS_OPTIONS.map((option) => {
             return {
                 key: `thickness:${option.value}`,
                 label: option.label,
                 icon: option.value === dividerThickness ? "☑" : "☐",
             };
         });
-        const lineStyleItems = LINE_STYLE_OPTIONS.map((option) => {
+        const lineStyleItems: BlockMenuItem[] = LINE_STYLE_OPTIONS.map((option) => {
             return {
                 key: `lineStyle:${option.value}`,
                 label: option.label,
@@ -381,7 +442,7 @@ export function SortableBlock({
 
     let bodyContent;
     if (blockType === "divider") {
-        const dividerInlineStyle = {
+        const dividerInlineStyle: CSSProperties = {
             borderTopWidth: `${dividerThickness}px`,
             borderTopStyle: dividerLineStyle,
             borderTopColor: "var(--color-text-muted)",
