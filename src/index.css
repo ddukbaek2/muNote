@@ -1,0 +1,116 @@
+:root {
+    --color-bg: #ffffff;
+    --color-bg-sidebar: #fbfbfa;
+    --color-bg-chip: #f7f7f5;
+    --color-text: #37352f;
+    --color-text-muted: #9b9a97;
+    --color-text-strong: #1f2933;
+    --color-border: #ededec;
+    --color-hover: #efefee;
+    --color-selected: #e3e2df;
+    --color-placeholder: #d4d3cf;
+    --color-scrollbar: #d4d3cf;
+    --color-scrollbar-hover: #b6b5b1;
+    --color-code-bg: #f5f5f4;
+    --color-code-text: #37352f;
+    --color-danger-bg: #fbdada;
+    --color-danger-text: #c0392b;
+    --color-accent: #2563eb;
+    --color-overlay-shadow: rgba(0, 0, 0, 0.18);
+    --block-color-gray: #9b9a97;
+    --block-color-brown: #937264;
+    --block-color-orange: #d9730d;
+    --block-color-yellow: #cb912f;
+    --block-color-green: #448361;
+    --block-color-blue: #337ea9;
+    --block-color-purple: #9065b0;
+    --block-color-pink: #c14c8a;
+    --block-color-red: #d44c47;
+    color-scheme: light;
+}
+
+[data-theme="dark"] {
+    --color-bg: #191919;
+    --color-bg-sidebar: #202020;
+    --color-bg-chip: #2a2a2a;
+    --color-text: #e6e6e3;
+    --color-text-muted: #9b9a97;
+    --color-text-strong: #f5f5f3;
+    --color-border: #2f2f2f;
+    --color-hover: #2a2a2a;
+    --color-selected: #3a3a3a;
+    --color-placeholder: #5a5a58;
+    --color-scrollbar: #3a3a3a;
+    --color-scrollbar-hover: #555555;
+    --color-code-bg: #111111;
+    --color-code-text: #e6e6e3;
+    --color-danger-bg: #4a1f1f;
+    --color-danger-text: #ff9a9a;
+    --color-accent: #5c87ff;
+    --color-overlay-shadow: rgba(0, 0, 0, 0.5);
+    --block-color-gray: #b4b4b0;
+    --block-color-brown: #b08c79;
+    --block-color-orange: #e58c4c;
+    --block-color-yellow: #e0b14a;
+    --block-color-green: #6db98a;
+    --block-color-blue: #5cabd4;
+    --block-color-purple: #b893d8;
+    --block-color-pink: #db84b3;
+    --block-color-red: #ed7d77;
+    color-scheme: dark;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-text-size-adjust: 100%;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    transition: background 160ms ease, color 160ms ease;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
+}
+
+body {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+}
+
+#root {
+    width: 100%;
+    min-height: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}

@@ -1,0 +1,268 @@
+.app {
+    display: flex;
+    width: 100%;
+    height: 100dvh;
+    color: var(--color-text);
+    background: var(--color-bg);
+}
+
+.tree-pane {
+    flex: 0 0 280px;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-sidebar);
+    overflow: hidden;
+    transition: width 200ms ease, flex-basis 200ms ease;
+}
+
+.pane-resizer {
+    flex: 0 0 auto;
+    width: 6px;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    z-index: 1;
+    touch-action: none;
+}
+
+.pane-resizer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--color-border);
+    transform: translateX(-50%);
+    transition: background 120ms ease, width 120ms ease;
+}
+
+.pane-resizer:hover::before,
+.pane-resizer:active::before {
+    background: var(--color-accent);
+    width: 3px;
+}
+
+.tree-pane-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 16px 14px 8px;
+}
+
+.tree-pane-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+}
+
+.tree-pane-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.settings-button,
+.tree-pane-add-root {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.settings-button:hover,
+.tree-pane-add-root:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.tree-scroll {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.detail-pane {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    background: var(--color-bg);
+    position: relative;
+}
+
+.tree-pane-open-toggle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.tree-pane-open-toggle:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.detail-content {
+    max-width: 1440px;
+    min-height: 100%;
+    margin: 0;
+    padding: 72px 64px 200px;
+}
+
+.detail-top-bar {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.content-settings-button {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.content-settings-button:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.detail-pane:has(> .detail-content[data-distinguish-block-area="true"]) {
+    background: var(--color-border);
+}
+
+.detail-content[data-distinguish-block-area="true"] {
+    background: var(--color-bg);
+}
+
+.detail-breadcrumb {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+}
+
+.detail-breadcrumb-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+}
+
+.detail-breadcrumb-separator {
+    color: var(--color-text-muted);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+    user-select: none;
+    padding: 0;
+}
+
+.detail-breadcrumb-entry {
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.detail-breadcrumb-entry:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.detail-breadcrumb-entry.is-current {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.detail-title-input {
+    width: 100%;
+    margin: 0 0 24px;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text);
+}
+
+.detail-title-input::placeholder {
+    color: var(--color-placeholder);
+}
+
+.detail-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-muted);
+    font-size: 15px;
+}
+
+.tree-scroll,
+.detail-pane {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar) transparent;
+}
+
+.tree-scroll::-webkit-scrollbar,
+.detail-pane::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.tree-scroll::-webkit-scrollbar-thumb,
+.detail-pane::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar);
+    border-radius: 8px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+.tree-scroll::-webkit-scrollbar-thumb:hover,
+.detail-pane::-webkit-scrollbar-thumb:hover {
+    background: var(--color-scrollbar-hover);
+    background-clip: content-box;
+}
+
+.tree-scroll::-webkit-scrollbar-track,
+.detail-pane::-webkit-scrollbar-track {
+    background: transparent;
+}

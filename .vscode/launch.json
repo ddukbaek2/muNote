@@ -1,0 +1,34 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch Chrome (Vite Dev)",
+			"type": "chrome",
+			"request": "launch",
+			"url": "http://localhost:5173",
+			"webRoot": "${workspaceFolder}",
+			"sourceMaps": true,
+			"preLaunchTask": "vite: dev",
+			"postDebugTask": "vite: dev:stop"
+		},
+		{
+			"name": "Launch Edge (Vite Dev)",
+			"type": "msedge",
+			"request": "launch",
+			"url": "http://localhost:5173",
+			"webRoot": "${workspaceFolder}",
+			"sourceMaps": true,
+			"preLaunchTask": "vite: dev",
+			"postDebugTask": "vite: dev:stop"
+		},
+		{
+			"name": "Attach Chrome (Vite Dev)",
+			"type": "chrome",
+			"request": "attach",
+			"port": 9222,
+			"url": "http://localhost:5173",
+			"webRoot": "${workspaceFolder}"
+		}
+	],
+	"compounds": []
+}
