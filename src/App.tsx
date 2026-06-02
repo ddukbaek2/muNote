@@ -28,7 +28,49 @@ const initialItems: TreeItem[] = [
         id: "welcome",
         label: "환영합니다",
         blocks: [
-            { id: "welcome-b1", type: "text", text: "muNote 에 오신 것을 환영합니다." },
+            { id: "welcome-h1", type: "h1", text: "muNote 에 오신 것을 환영합니다" },
+            { id: "welcome-t1", type: "text", text: "이 문서는 사용 가능한 블록 타입을 한눈에 보여주는 기본 샘플입니다. 좌측의 + 새 문서 로 새 문서를 만들고, 각 블록의 ⠿ 핸들 메뉴로 변환·색·복제·삭제할 수 있습니다." },
+            { id: "welcome-div1", type: "divider", thickness: 2, lineStyle: "solid" },
+            { id: "welcome-h2", type: "h2", color: "blue", text: "텍스트 블록" },
+            { id: "welcome-t2", type: "text", text: "기본 단락 블록입니다. Enter 로 새 블록을 만들고, Shift+Enter 로 줄바꿈합니다." },
+            { id: "welcome-t3", type: "text", color: "gray", text: "회색 강조 단락 — 핸들 메뉴 → 텍스트 색 에서 9가지 색을 적용할 수 있습니다." },
+            { id: "welcome-t4", type: "text", color: "red", text: "빨강 강조 — 중요한 항목을 표시할 때 사용하세요." },
+            { id: "welcome-h3a", type: "h3", text: "제목 단계 (H1 / H2 / H3)" },
+            { id: "welcome-t5", type: "text", text: "위에서 H1, H2, H3 를 각각 보실 수 있습니다." },
+            { id: "welcome-div2", type: "divider", thickness: 1, lineStyle: "dashed" },
+            { id: "welcome-h2b", type: "h2", color: "green", text: "체크리스트" },
+            { id: "welcome-c1", type: "checklist", checked: true, color: "green", text: "좌측 « 버튼으로 사이드바 토글" },
+            { id: "welcome-c2", type: "checklist", checked: true, text: "콘텐트 우상단 ⋯ 로 제목·경로·문서영역 토글" },
+            { id: "welcome-c3", type: "checklist", checked: false, color: "orange", text: "블록을 핸들로 드래그해 순서 바꿔보기" },
+            { id: "welcome-c4", type: "checklist", checked: false, color: "purple", text: "코드 블록의 언어를 바꿔 하이라이트 확인" },
+            { id: "welcome-div3", type: "divider", thickness: 1, lineStyle: "dotted" },
+            { id: "welcome-h2c", type: "h2", color: "purple", text: "코드 블록" },
+            { id: "welcome-t6", type: "text", text: "언어를 선택하면 자동 하이라이트됩니다. Tab 입력 가능, 우상단 복사 버튼으로 클립보드 복사." },
+            {
+                id: "welcome-code-js",
+                type: "code",
+                language: "javascript",
+                text: "function fibonacci(n) {\n    if (n < 2) {\n        return n;\n    }\n    return fibonacci(n - 1) + fibonacci(n - 2);\n}\n\nconsole.log(fibonacci(10)); // 55",
+            },
+            { id: "welcome-h3b", type: "h3", text: "TypeScript 예시" },
+            {
+                id: "welcome-code-ts",
+                type: "code",
+                language: "typescript",
+                text: "interface User {\n    id: string;\n    name: string;\n    email?: string;\n}\n\nfunction greet(user: User): string {\n    return `Hello, ${user.name}!`;\n}",
+            },
+            { id: "welcome-h3c", type: "h3", text: "Python 예시" },
+            {
+                id: "welcome-code-py",
+                type: "code",
+                language: "python",
+                text: "def fizzbuzz(n: int) -> None:\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            print(\"FizzBuzz\")\n        elif i % 3 == 0:\n            print(\"Fizz\")\n        elif i % 5 == 0:\n            print(\"Buzz\")\n        else:\n            print(i)\n\nfizzbuzz(20)",
+            },
+            { id: "welcome-div4", type: "divider", thickness: 4, lineStyle: "double" },
+            { id: "welcome-h2d", type: "h2", color: "brown", text: "수평선" },
+            { id: "welcome-t7", type: "text", text: "위 굵은 이중선처럼 핸들 메뉴에서 두께(1/2/4/6px) 와 스타일(실선/파선/점선/이중선) 을 조합할 수 있습니다." },
+            { id: "welcome-div5", type: "divider", thickness: 6, lineStyle: "solid" },
+            { id: "welcome-t8", type: "text", color: "pink", text: "이 문서는 언제든 자유롭게 편집하거나 + 새 문서 로 새 문서를 시작하세요." },
         ],
         collapsed: false,
         children: [],
@@ -398,8 +440,8 @@ function App() {
     const selectedPath = selectedId !== null ? getItemPath(items, selectedId) : [];
     const selectedSettings: ItemSettings = (selectedItem && selectedItem.settings) ? selectedItem.settings : {};
     const showTitle = selectedSettings.showTitle !== false;
-    const showBreadcrumb = selectedSettings.showBreadcrumb !== false;
-    const distinguishBlockArea = selectedSettings.distinguishBlockArea === true;
+    const showBreadcrumb = selectedSettings.showBreadcrumb === true;
+    const distinguishBlockArea = selectedSettings.distinguishBlockArea !== false;
 
     function handleContentMenuSelect(key: string) {
         if (selectedId === null || !selectedItem) {
